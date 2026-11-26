@@ -9,12 +9,13 @@ const identity=[[1,0,0],[0,1,0],[0,0,1]];
 // Rectangular profiles share one explicit corner-cut convention. No spherical character primitives.
 function profile(w,d,k,z=0){
   const a=w/2,b=d/2,t=Math.min(a,b)*k;
+  if(k===0)return [[-a,b+z],[-a,-b+z],[a,-b+z],[a,b+z]];
   return [[-a+t,b+z],[-a,b-t+z],[-a,-b+t+z],[-a+t,-b+z],[a-t,-b+z],[a,-b+t+z],[a,b-t+z],[a-t,b+z]];
 }
 function loft(o,sections,c,axes=identity,alpha=1){
   const v=[],f=[];for(const [y,w,d,k,z=0] of sections)for(const [x,q] of profile(w,d,k,z))v.push(transform([x,y,q],o,axes));
-  const n=sections.length;f.push([7,6,5,4,3,2,1,0],Array.from({length:8},(_,i)=>(n-1)*8+i));
-  for(let j=0;j<n-1;j++)for(let i=0;i<8;i++){let a=j*8+i,b=j*8+(i+1)%8;f.push([a,b,b+8,a+8])}
+  const n=sections.length,m=v.length/n;f.push(Array.from({length:m},(_,i)=>m-1-i),Array.from({length:m},(_,i)=>(n-1)*m+i));
+  for(let j=0;j<n-1;j++)for(let i=0;i<m;i++){let a=j*m+i,b=j*m+(i+1)%m;f.push([a,b,b+m,a+m])}
   mesh(v,f,c,alpha);
 }
 function block(o,w,h,d,c,axes=identity,bevel=.12,top=1,alpha=1){
@@ -119,7 +120,7 @@ function build(){
     block(lerp(heel,split,.5),.088,Math.hypot(...sub(split,heel)),.17,black,bladeAxes,.10);
     block(lerp(split,toe,.5),.088,Math.hypot(...sub(toe,split)),.17,q,bladeAxes,.10);
   }
-  puck([.65,.031,.80],.105,.052,black);
+  puck([flip*.65,.031,.80],.105,.052,black);
 }
 let renderer=null,three=null,scene=null,camera=null,group=null,ctx=null;let width=1,height=1;
 function resize(){const r=stage.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);if(renderer){renderer.setSize(width,height,false);camera.left=-1;renderThree()}else{let dpr=Math.min(devicePixelRatio,2);canvas.width=width*dpr;canvas.height=height*dpr;ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);renderFallback()}}
